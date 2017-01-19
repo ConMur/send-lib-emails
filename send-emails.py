@@ -7,9 +7,6 @@ import argparse
 #Import sys so that we can exit when given bad command line args
 import sys
 
-#Import re for regex tokenizing of the file input
-import re
-
 #Import datetime and time to check dates
 from datetime import date
 import time

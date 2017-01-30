@@ -49,9 +49,8 @@ if not "exec" in str(output):
 csclubPwd = getpass.getpass()
 
 #Set up email
-server = smtplib.SMTP("mail.csclub.uwaterloo.ca", 587)
-server.starttls()
-server.login(csclubID,csclubPwd)
+server = smtplib.SMTP_SSL("mail.csclub.uwaterloo.ca", 465)
+server.login(csclubID, csclubPwd)
 
 #Function definitons
 def send_email(quest_id: str, date: str, book_name_list) -> None:
@@ -62,9 +61,14 @@ def send_email(quest_id: str, date: str, book_name_list) -> None:
     book_name = "".join(book_name_list)
 
     if overdue(days, date):
-        email_message ="Hi " + quest_id + ",\n\n" +  "Our records indicate that you have had the book "+ book_name + "signed out for " + str(days) + " days.\n\n" +  "Please return the book to the CS Club office (MC 3036) at your earliest convenience.\n\n" + "Thanks,\n\n" + args.librarianName + "Librarian\n" + "Computer Science Club | University of Waterloo\n" + "librarian@csclub.uwaterloo.ca"
- 
+        email_message_body = "Hi " + quest_id + ",\n\n" +  "Our records indicate that you have had the book " + book_name + " signed out for " + str(days) + " days.\n\n" +  "Please return the book to the CS Club office (MC 3036) at your earliest convenience.\n\n" + "Thanks,\n\n" + args.librarianName + "\n" + "Computer Science Club | University of Waterloo\n" + "librarian@csclub.uwaterloo.ca"
+        
+        email_message_subject = "Overdue book: {}".format(book_name)
+        email_message = "Subject: {}\n\n{}".format(email_message_subject, email_message_body)
+
         print("sending email for book {}".format(book_name))
+
+        server.sendmail("librarian@csclub.uwaterloo.ca", email_address, email_message)
     else:
         print("not sending email for book {}".format(book_name))
 
@@ -90,11 +94,18 @@ for line in signed_out_books_file:
     
     #Change book name into a space seperated name
     book_name_with_spaces = ""
-    for i in range(len(tokens)):
-        book_name_with_spaces += str(tokens[i - 2]) + " "
+
+    for i in range(len(tokens) - 2):
+        book_name_with_spaces += str(tokens[i + 2]) + " "
+    
+    #Remove the \n at the end of book_name_with_spaces
+    book_name_with_spaces = book_name_with_spaces[:-2]
 
     send_email(tokens[0], tokens[1], book_name_with_spaces)
-    
+
+#Exit from the email server    
+server.quit()
+
 
 #TODO: parse contents of file and send emails if they have been checked out for
 # longer than "days" days
